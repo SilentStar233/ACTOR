@@ -1,0 +1,9 @@
+/data/
+/config.json
+/.venv/
+/__pycache__/
+*.py[cod]
+*.log
+/.pytest_cache/
+/.mypy_cache/
+.DS_Store

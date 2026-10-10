@@ -1,0 +1,10 @@
+# Install a CUDA-compatible PyTorch build for your system before this file.
+# The trainer uses the TRL 0.13 DPOConfig/DPOTrainer API with rpo_alpha.
+# FlashAttention 2 must be installed separately for the selected Torch/CUDA.
+torch>=2.3,<3
+transformers>=4.46,<4.48
+datasets>=2.21,<4
+accelerate>=0.34,<2
+peft>=0.12,<0.18
+trl==0.13.0
+bitsandbytes>=0.44,<1
