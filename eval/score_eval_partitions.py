@@ -4,7 +4,7 @@
 The final evaluation set contains two semantically different partitions:
 
 * ``split == "all"``: Eval Only books.  No action from these books is used
-  for DPO training.
+  for RPO training.
 * ``split == "tail"``: Train Eval books.  Earlier actions (the head split)
   are used for training and later actions (the tail split) are used for
   evaluation.
@@ -213,10 +213,10 @@ def score_one(
         "context_variant": context_variant,
         "source_results": str(results_path.resolve()),
         "partition_definition": {
-            "eval_only": "question split='all'; books never used for DPO training",
+            "eval_only": "question split='all'; books never used for RPO training",
             "train_eval": (
                 "question split='tail'; earlier actions from the same books "
-                "form the DPO training head split"
+                "form the RPO training head split"
             ),
         },
         "expected_question_counts": question_counts,

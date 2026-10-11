@@ -1,15 +1,14 @@
 """Shared prompt construction for training and evaluation.
 
 This module is the single source of truth for how a character's context
-(profile + memory + scene) is assembled into a prompt.  Both the dataset
-builder and the evaluation/training scripts import this function so that
-the prompt never drifts between data construction, DPO training, and
+(profile + memory + scene) is assembled into a prompt.  The evaluation and training scripts use this function so that
+the prompt never drifts between data construction, RPO training, and
 evaluation.
 
 The function returns the *context* portion only — it does NOT include
 options or output-format instructions.  Callers append those as needed:
 
-  - DPO training:   prompt = build_context_prompt(rec)
+  - RPO training:   prompt = build_context_prompt(rec)
                     chosen = rec["chosen"];  rejected = rec["rejected"]
 
   - Eval likelihood: prompt = build_context_prompt(q)

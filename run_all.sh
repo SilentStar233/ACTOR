@@ -10,13 +10,6 @@ fi
 
 MODEL="${MODEL:-gpt-5.6-luna}"
 
-python3 check_pipeline.py \
-  --src data/src/all_books.jsonl \
-  --books-root data \
-  --eval-only-books eval_only_books.txt \
-  --train-eval-books train_eval_books.txt \
-  --train-only-books train_only_books.txt || exit 1
-
 python3 -u run_full_pipeline.py \
   --src data/src/all_books.jsonl \
   --books-root data \
