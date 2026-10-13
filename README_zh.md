@@ -14,7 +14,7 @@
   <a href="README.md">English</a> · <strong>简体中文</strong>
 </p>
 
-https://github.com/user-attachments/assets/9046b658-7e14-465d-a4ac-65beb045274b
+https://github.com/user-attachments/assets/e827ce87-75ac-442e-a478-2683b6d3096c
 
 以一道真实匿名题目展示角色上下文、候选行为及参考答案。上下文为便于展示而精简。
 
