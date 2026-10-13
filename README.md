@@ -154,6 +154,32 @@ Adjust concurrency and rate limits to your actual API quota.
 
 ## Model Evaluation
 
+### Question Illustration
+
+<p align="center">
+  <a href="figures/benchmark_example.png">
+    <img src="figures/benchmark_example.png" width="100%" alt="ACTOR task illustration: select the next action from a character profile, long-term memory, recent experiences, and the current scene">
+  </a>
+</p>
+
+**Task illustration, not a reproduction of a complete dataset question.** Images are for presentation only: the actual input is text, and the model answers A/B/C/D. Current Scene and Recent Memory are combined visually here but stored separately as `scene` and `recent_memory`.
+
+<details>
+<summary><strong>Evaluation JSONL fields</strong></summary>
+
+| Field | Content |
+| --- | --- |
+| `profile` | Current profile; the prompt uses its `text` |
+| `long_term_memory` / `recent_memory` | Key historical and recent experiences, containing Thought, Action, and Observation |
+| `scene` | Scene description, time, and participant information |
+| `options` | Four candidate actions, each with `id` and `text` |
+| `correct_answer` | Reference answer for scoring only; not supplied to the model |
+| `question_id` / `split` / `is_critical` | Question identifier, evaluation partition, and behavior type |
+
+Each line contains one JSON object. Standard anonymized evaluation does not display original book titles or character names.
+
+</details>
+
 ### Run Evaluation
 
 Configure an OpenAI-compatible service and run (local vLLM example):
@@ -287,6 +313,15 @@ The question file must match the results. Rescoring uses existing results and do
 
 ## RPO Training
 
+### Training Sample
+
+The same character context is paired with **chosen / rejected action texts**. Below is an excerpt from a real training sample:
+
+| Context summary | Character 1 is an abbess visiting Character 2 after breakfast; Character 2 responds with friendly conversation |
+| --- | --- |
+| chosen | Listens and smiles without saying a word while Character 2 talks of Court intrigues. |
+| rejected | Hastens to unseal the register, exposing each sheltered pensioner to Character 2 imprudent curiosity. |
+
 ### Environment Setup
 
 Prepare a base model, Linux, an NVIDIA GPU supporting BF16 and FlashAttention 2, and a compatible CUDA-enabled PyTorch build, then install:
@@ -334,6 +369,24 @@ bash train/run_train.sh \
 The three positional arguments are the **base model directory, prepared data directory, and training output directory**, in that order.
 
 Defaults are a single GPU, 4-bit QLoRA, `beta=0.1`, `rpo_alpha=1.0`, and 1 epoch. RPO uses TRL’s `DPOTrainer` with an additional chosen-response NLL term weighted by `rpo_alpha`. Outputs include checkpoints and `final_adapter/`: a **LoRA adapter, not full weights**, requiring the base model.
+
+### Improvements After Training
+
+These are actual predictions from Qwen2.5-7B-Instruct and ACTOR-Qwen-2.5-7B on identical anonymized questions. Action descriptions summarize the options; models returned letters.
+
+| Case | Base model | After RPO | Reference |
+| --- | --- | --- | --- |
+| A steward encounters resistance (*King Lear*) | D: Protect the blind man ✗ | C: Fight the intervening character ✓ | C |
+| Estrangement within a household (*Jane Eyre*) | C: Seek the other character’s company ✗ | B: Minimize conversation with them ✓ | B |
+
+<details>
+<summary><strong>Case provenance</strong></summary>
+
+Question IDs: `King Lear::oswald::p029_s000_t002_a004`, `Jane Eyre::eliza_reed::p007_s000_t000_a000`. Training sample ID: `The Three Musketeers::abbess::p129_s003_t001_a001`.
+
+Sources are the 20260916 formal evaluation artifacts and the 20260828 rebuilt training data; predictions were verified by ID. The historical experiments selected checkpoints using a subset of the formal evaluation set, not a fully independent model-selection protocol. Only individual cases are shown here, not aggregate performance.
+
+</details>
 
 <details>
 <summary><strong>Advanced: training parameters and resuming</strong></summary>

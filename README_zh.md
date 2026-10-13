@@ -69,12 +69,12 @@ cp config.example.json config.json
 
 准备小说源文件和三份书单：
 
-| 文件 | 用途与划分规则 |
-| --- | --- |
-| `data/src/all_books.jsonl` | 小说原文，每行一本书 |
-| `eval_only_books.txt` | 全部行为进入评测候选范围，经筛选和采样后生成题目 |
-| `train_eval_books.txt` | 每个角色按行为时间顺序划分，前 80% 训练、后 20% 评测，再分别筛选 |
-| `train_only_books.txt` | 全部行为进入训练候选范围，经筛选后生成样本 |
+| 文件                       | 用途与划分规则                                                   |
+| -------------------------- | ---------------------------------------------------------------- |
+| `data/src/all_books.jsonl` | 小说原文，每行一本书                                             |
+| `eval_only_books.txt`      | 全部行为进入评测候选范围，经筛选和采样后生成题目                 |
+| `train_eval_books.txt`     | 每个角色按行为时间顺序划分，前 80% 训练、后 20% 评测，再分别筛选 |
+| `train_only_books.txt`     | 全部行为进入训练候选范围，经筛选后生成样本                       |
 
 小说源文件格式：
 
@@ -153,6 +153,32 @@ python3 run_full_pipeline.py \
 </details>
 
 ## 模型评测
+
+### 题目示意
+
+<p align="center">
+  <a href="figures/benchmark_example.png">
+    <img src="figures/benchmark_example.png" width="100%" alt="ACTOR 任务示意：根据角色档案、长期记忆、近期经历和当前场景选择下一步行为">
+  </a>
+</p>
+
+**任务示意图，非某条完整题目的复现。** 图片仅辅助展示，实际输入为文本，模型回答 A/B/C/D。图中合并展示的 Current Scene 与 Recent Memory，在数据中分别保存为 `scene` 和 `recent_memory`。
+
+<details>
+<summary><strong>评测 JSONL 字段一览</strong></summary>
+
+| 字段                                    | 内容                                                  |
+| --------------------------------------- | ----------------------------------------------------- |
+| `profile`                               | 当前档案，提示词使用其中的 `text`                     |
+| `long_term_memory` / `recent_memory`    | 关键历史与近期经历，包含 Thought、Action、Observation |
+| `scene`                                 | 场景描述、时间及参与者信息                            |
+| `options`                               | 四个候选行为，包含 `id` 和 `text`                     |
+| `correct_answer`                        | 参考答案，仅用于评分，不输入模型                      |
+| `question_id` / `split` / `is_critical` | 题目标识、评测分区及行为类型                          |
+
+每行一个 JSON 对象。标准匿名评测不展示原书名或原人物姓名。
+
+</details>
 
 ### 启动评测
 
@@ -287,6 +313,15 @@ python3 eval/score_eval_partitions.py \
 
 ## RPO 训练
 
+### 训练样本示例
+
+同一角色上下文对应一对 **chosen / rejected 行为文本**。下面是一条真实训练样本的节选：
+
+| 上下文摘要 | Character 1 是修道院院长，早餐后拜访 Character 2，对方亲切地与她交谈                                  |
+| ---------- | ----------------------------------------------------------------------------------------------------- |
+| chosen     | Listens and smiles without saying a word while Character 2 talks of Court intrigues.                  |
+| rejected   | Hastens to unseal the register, exposing each sheltered pensioner to Character 2 imprudent curiosity. |
+
 ### 环境准备
 
 准备基础模型，以及 Linux、支持 BF16 和 FlashAttention 2 的 NVIDIA GPU 与兼容的 CUDA 版 PyTorch，然后安装训练依赖：
@@ -334,6 +369,24 @@ bash train/run_train.sh \
 三个位置参数依次为：**基础模型目录、准备好的数据目录、训练输出目录**。
 
 默认单 GPU、4-bit QLoRA、`beta=0.1`、`rpo_alpha=1.0`，训练 1 个 epoch。RPO 使用 TRL `DPOTrainer`，额外加入由 `rpo_alpha` 加权的 chosen 回答 NLL 项。输出包含 checkpoint 和 `final_adapter/`；后者是 **LoRA 适配器而非完整权重**，使用时仍需基础模型。
+
+### 训练前后的改善效果
+
+以下是 Qwen2.5-7B-Instruct 与 ACTOR-Qwen-2.5-7B 在相同匿名题目上的真实预测。行为描述为选项摘要；模型实际输出字母。
+
+| 案例                          | 基础模型              | RPO 训练后              | 参考答案 |
+| ----------------------------- | --------------------- | ----------------------- | -------- |
+| 管家遭遇阻挡（《李尔王》）    | D：保护失明者 ✗       | C：与阻挡者战斗 ✓       | C        |
+| 家庭中的疏远关系（《简·爱》） | C：主动寻找对方作伴 ✗ | B：尽量减少与对方交谈 ✓ | B        |
+
+<details>
+<summary><strong>案例追溯</strong></summary>
+
+评测题 ID：`King Lear::oswald::p029_s000_t002_a004`、`Jane Eyre::eliza_reed::p007_s000_t000_a000`。训练样本 ID：`The Three Musketeers::abbess::p129_s003_t001_a001`。
+
+来源为 20260916 正式评测产物及 20260828 重建训练数据，预测已按 ID 核对。历史实验使用正式评测集的子集选择 checkpoint，并非完全独立的模型选择协议；此处只展示个例，不报告总体性能。
+
+</details>
 
 <details>
 <summary><strong>进阶：训练参数与恢复训练</strong></summary>
