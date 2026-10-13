@@ -14,6 +14,10 @@
   <a href="README.md">English</a> · <strong>简体中文</strong>
 </p>
 
+[![ACTOR Benchmark 演示](figures/benchmark_demo_cover.png)](figures/benchmark_demo.mp4)
+
+▶ [点击观看演示](figures/benchmark_demo.mp4)：以一道真实匿名题目展示角色上下文、候选行为及参考答案。上下文为便于展示而精简。
+
 ## 项目介绍
 
 ACTOR 提供从小说原文到角色行为数据集的完整构建流水线，以及配套的模型评测和 RPO 训练工具。

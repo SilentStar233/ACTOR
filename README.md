@@ -14,6 +14,10 @@
   <strong>English</strong> · <a href="README_zh.md">简体中文</a>
 </p>
 
+[![ACTOR benchmark demo](figures/benchmark_demo_cover.png)](figures/benchmark_demo.mp4)
+
+▶ [Watch the demo](figures/benchmark_demo.mp4): follow a real anonymized question from character context to candidate actions and the reference answer. Context is shortened for display.
+
 ## Introduction
 
 ACTOR provides an end-to-end pipeline for constructing character behavior datasets from novels, together with tools for model evaluation and RPO training.
@@ -69,12 +73,12 @@ Edit `config.json` with the API credentials for dataset construction:
 
 Prepare the source novels and three book lists:
 
-| File | Purpose and partitioning |
-| --- | --- |
-| `data/src/all_books.jsonl` | Original novel texts, one book per line |
-| `eval_only_books.txt` | All actions enter the evaluation pool; filtering and sampling determine the questions |
-| `train_eval_books.txt` | For each character, assign the first 80% of chronological actions to training and the last 20% to evaluation, then apply the respective filters |
-| `train_only_books.txt` | All actions enter the training pool; filtering determines the samples |
+| File                       | Purpose and partitioning                                                                                                                        |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data/src/all_books.jsonl` | Original novel texts, one book per line                                                                                                         |
+| `eval_only_books.txt`      | All actions enter the evaluation pool; filtering and sampling determine the questions                                                           |
+| `train_eval_books.txt`     | For each character, assign the first 80% of chronological actions to training and the last 20% to evaluation, then apply the respective filters |
+| `train_only_books.txt`     | All actions enter the training pool; filtering determines the samples                                                                           |
 
 Source record format:
 
@@ -137,16 +141,16 @@ python3 run_full_pipeline.py \
 
 The defaults below apply when **running `run_full_pipeline.py` directly**, not to the conservative Bash entry point:
 
-| Argument | Default | Description |
-| --- | ---: | --- |
-| `--model` | `gpt-5.6-luna` | Model used for extraction, judgment, profiles, action refinement, and anonymization |
-| `--parallel-books` | `8` | Concurrent books during extraction, profile generation, and action refinement |
-| `--profile-workers` | `5` | Concurrent profile workers per book |
-| `--rewash-workers` | `8` | Concurrent action-refinement workers per book |
-| `--anonymize-workers` | `8` | Concurrent anonymization workers per file |
-| `--parallel-anonymize-files` | `1` | Concurrent files; together with per-file workers, affects request concurrency |
-| `--max-rpm` | `2000` | Requests-per-minute limit passed to model-calling batch stages |
-| `--max-tpm` | `4000000` | Tokens-per-minute limit passed to model-calling batch stages |
+| Argument                     |        Default | Description                                                                         |
+| ---------------------------- | -------------: | ----------------------------------------------------------------------------------- |
+| `--model`                    | `gpt-5.6-luna` | Model used for extraction, judgment, profiles, action refinement, and anonymization |
+| `--parallel-books`           |            `8` | Concurrent books during extraction, profile generation, and action refinement       |
+| `--profile-workers`          |            `5` | Concurrent profile workers per book                                                 |
+| `--rewash-workers`           |            `8` | Concurrent action-refinement workers per book                                       |
+| `--anonymize-workers`        |            `8` | Concurrent anonymization workers per file                                           |
+| `--parallel-anonymize-files` |            `1` | Concurrent files; together with per-file workers, affects request concurrency       |
+| `--max-rpm`                  |         `2000` | Requests-per-minute limit passed to model-calling batch stages                      |
+| `--max-tpm`                  |      `4000000` | Tokens-per-minute limit passed to model-calling batch stages                        |
 
 Adjust concurrency and rate limits to your actual API quota.
 
@@ -167,14 +171,14 @@ Adjust concurrency and rate limits to your actual API quota.
 <details>
 <summary><strong>Evaluation JSONL fields</strong></summary>
 
-| Field | Content |
-| --- | --- |
-| `profile` | Current profile; the prompt uses its `text` |
-| `long_term_memory` / `recent_memory` | Key historical and recent experiences, containing Thought, Action, and Observation |
-| `scene` | Scene description, time, and participant information |
-| `options` | Four candidate actions, each with `id` and `text` |
-| `correct_answer` | Reference answer for scoring only; not supplied to the model |
-| `question_id` / `split` / `is_critical` | Question identifier, evaluation partition, and behavior type |
+| Field                                   | Content                                                                            |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| `profile`                               | Current profile; the prompt uses its `text`                                        |
+| `long_term_memory` / `recent_memory`    | Key historical and recent experiences, containing Thought, Action, and Observation |
+| `scene`                                 | Scene description, time, and participant information                               |
+| `options`                               | Four candidate actions, each with `id` and `text`                                  |
+| `correct_answer`                        | Reference answer for scoring only; not supplied to the model                       |
+| `question_id` / `split` / `is_critical` | Question identifier, evaluation partition, and behavior type                       |
 
 Each line contains one JSON object. Standard anonymized evaluation does not display original book titles or character names.
 
@@ -218,22 +222,22 @@ Set `EVAL_OUTPUT` to a separate result path for each experiment. Resume requires
 <details>
 <summary><strong>Advanced: evaluation parameters and direct Python usage</strong></summary>
 
-| Environment variable | Python argument | Default / purpose |
-| --- | --- | --- |
-| `EVAL_QUESTIONS` | `--questions` | Automatically merges final anonymized questions by default; may specify an existing JSONL file |
-| `EVAL_OUTPUT` | `--output` | `data/eval_results/results.jsonl` |
-| `EVAL_SCORES` | `--scores` | `<result-path-without-extension>.score.json` |
-| `EVAL_PARTITION_SCORES` | `--partition-scores` | `<result-path-without-extension>.partition-score.json` |
-| `EVAL_WORKERS` | `--workers` | `4` concurrent requests |
-| `EVAL_MAX_TOKENS` | `--max-tokens` | `4`, sent as `max_completion_tokens` |
-| `EVAL_TEMPERATURE` | `--temperature` | `0`; `omit` corresponds to `--omit-temperature` |
-| `EVAL_SEED` | `--seed` | `0`; `omit` corresponds to `--omit-seed` |
-| `EVAL_ABLATION` | `--ablation` | `no_book`; standard protocol names are `no_book/full` |
-| `EVAL_CONTEXT_VARIANT` | `--context-variant` | `baseline` |
-| `EVAL_GUIDED_CHOICE` | `--guided-choice A B C D` | `off`; `on` enables answer-choice constraints |
-| `EVAL_DISABLE_THINKING` | `--disable-thinking` | `off`; `on` sends `chat_template_kwargs.enable_thinking=false` |
-| `EVAL_PARTITION_MODE` | `--partition-mode` | `auto`; also accepts `required/off` |
-| `PYTHON` | — | `python3`; interpreter used by the evaluation Bash wrapper |
+| Environment variable    | Python argument           | Default / purpose                                                                              |
+| ----------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `EVAL_QUESTIONS`        | `--questions`             | Automatically merges final anonymized questions by default; may specify an existing JSONL file |
+| `EVAL_OUTPUT`           | `--output`                | `data/eval_results/results.jsonl`                                                              |
+| `EVAL_SCORES`           | `--scores`                | `<result-path-without-extension>.score.json`                                                   |
+| `EVAL_PARTITION_SCORES` | `--partition-scores`      | `<result-path-without-extension>.partition-score.json`                                         |
+| `EVAL_WORKERS`          | `--workers`               | `4` concurrent requests                                                                        |
+| `EVAL_MAX_TOKENS`       | `--max-tokens`            | `4`, sent as `max_completion_tokens`                                                           |
+| `EVAL_TEMPERATURE`      | `--temperature`           | `0`; `omit` corresponds to `--omit-temperature`                                                |
+| `EVAL_SEED`             | `--seed`                  | `0`; `omit` corresponds to `--omit-seed`                                                       |
+| `EVAL_ABLATION`         | `--ablation`              | `no_book`; standard protocol names are `no_book/full`                                          |
+| `EVAL_CONTEXT_VARIANT`  | `--context-variant`       | `baseline`                                                                                     |
+| `EVAL_GUIDED_CHOICE`    | `--guided-choice A B C D` | `off`; `on` enables answer-choice constraints                                                  |
+| `EVAL_DISABLE_THINKING` | `--disable-thinking`      | `off`; `on` sends `chat_template_kwargs.enable_thinking=false`                                 |
+| `EVAL_PARTITION_MODE`   | `--partition-mode`        | `auto`; also accepts `required/off`                                                            |
+| `PYTHON`                | —                         | `python3`; interpreter used by the evaluation Bash wrapper                                     |
 
 You can also invoke Python directly to evaluate and score:
 
@@ -260,12 +264,12 @@ Answer-choice constraints and disabling thinking are service extensions and may 
 ### Context Ablations
 
 | `--context-variant` | Character profile | Long-term memory | Recent memory |
-| --- | --- | --- | --- |
-| `baseline` | Retained | Retained | Retained |
-| `no_profile` | Removed | Retained | Retained |
-| `no_recent` | Retained | Retained | Removed |
-| `no_long` | Retained | Removed | Retained |
-| `no_memory` | Retained | Removed | Removed |
+| ------------------- | ----------------- | ---------------- | ------------- |
+| `baseline`          | Retained          | Retained         | Retained      |
+| `no_profile`        | Removed           | Retained         | Retained      |
+| `no_recent`         | Retained          | Retained         | Removed       |
+| `no_long`           | Retained          | Removed          | Retained      |
+| `no_memory`         | Retained          | Removed          | Removed       |
 
 Select a setting through `EVAL_CONTEXT_VARIANT`, such as `no_recent` to remove recent memory, and use a new `EVAL_OUTPUT`.
 
@@ -318,9 +322,9 @@ The question file must match the results. Rescoring uses existing results and do
 The same character context is paired with **chosen / rejected action texts**. Below is an excerpt from a real training sample:
 
 | Context summary | Character 1 is an abbess visiting Character 2 after breakfast; Character 2 responds with friendly conversation |
-| --- | --- |
-| chosen | Listens and smiles without saying a word while Character 2 talks of Court intrigues. |
-| rejected | Hastens to unseal the register, exposing each sheltered pensioner to Character 2 imprudent curiosity. |
+| --------------- | -------------------------------------------------------------------------------------------------------------- |
+| chosen          | Listens and smiles without saying a word while Character 2 talks of Court intrigues.                           |
+| rejected        | Hastens to unseal the register, exposing each sheltered pensioner to Character 2 imprudent curiosity.          |
 
 ### Environment Setup
 
@@ -374,10 +378,10 @@ Defaults are a single GPU, 4-bit QLoRA, `beta=0.1`, `rpo_alpha=1.0`, and 1 epoch
 
 These are actual predictions from Qwen2.5-7B-Instruct and ACTOR-Qwen-2.5-7B on identical anonymized questions. Action descriptions summarize the options; models returned letters.
 
-| Case | Base model | After RPO | Reference |
-| --- | --- | --- | --- |
-| A steward encounters resistance (*King Lear*) | D: Protect the blind man ✗ | C: Fight the intervening character ✓ | C |
-| Estrangement within a household (*Jane Eyre*) | C: Seek the other character’s company ✗ | B: Minimize conversation with them ✓ | B |
+| Case                                          | Base model                              | After RPO                            | Reference |
+| --------------------------------------------- | --------------------------------------- | ------------------------------------ | --------- |
+| A steward encounters resistance (_King Lear_) | D: Protect the blind man ✗              | C: Fight the intervening character ✓ | C         |
+| Estrangement within a household (_Jane Eyre_) | C: Seek the other character’s company ✗ | B: Minimize conversation with them ✓ | B         |
 
 <details>
 <summary><strong>Case provenance</strong></summary>
@@ -391,22 +395,22 @@ Sources are the 20260916 formal evaluation artifacts and the 20260828 rebuilt tr
 <details>
 <summary><strong>Advanced: training parameters and resuming</strong></summary>
 
-| Environment variable | Default | Description |
-| --- | ---: | --- |
-| `TRAIN_GPUS` | `1` | GPUs on a single machine; values greater than 1 launch DDP through `torchrun` |
-| `MODEL_PRECISION` | `4bit` | `4bit` for QLoRA; `bf16` for LoRA |
-| `RPO_ALPHA` | `1.0` | Chosen-response NLL weight; must be positive in this configuration |
-| `BETA` | `0.1` | Preference-loss parameter |
-| `LEARNING_RATE` | `5e-6` | Learning rate |
-| `NUM_TRAIN_EPOCHS` | `1` | Training epochs |
-| `MAX_STEPS` | `-1` | Maximum optimization steps; `-1` trains according to the epoch setting |
-| `BATCH_SIZE` | `1` | Batch size per GPU |
-| `GRADIENT_ACCUMULATION_STEPS` | `8` | Gradient accumulation steps |
-| `RESUME` | `none` | `auto` resumes from the latest checkpoint; an explicit path is also accepted |
-| `BNB_RESUME_FIX` | `0` | Set to `1` only for the relevant optimizer-state restore errors |
-| `MAX_LENGTH` | `8192` | Must match data preparation |
-| `MAX_PROMPT_LENGTH` | `7168` | Must match data preparation |
-| `RUN_NAME` | `character-action-rpo-no-book` | Training run name |
+| Environment variable          |                        Default | Description                                                                   |
+| ----------------------------- | -----------------------------: | ----------------------------------------------------------------------------- |
+| `TRAIN_GPUS`                  |                            `1` | GPUs on a single machine; values greater than 1 launch DDP through `torchrun` |
+| `MODEL_PRECISION`             |                         `4bit` | `4bit` for QLoRA; `bf16` for LoRA                                             |
+| `RPO_ALPHA`                   |                          `1.0` | Chosen-response NLL weight; must be positive in this configuration            |
+| `BETA`                        |                          `0.1` | Preference-loss parameter                                                     |
+| `LEARNING_RATE`               |                         `5e-6` | Learning rate                                                                 |
+| `NUM_TRAIN_EPOCHS`            |                            `1` | Training epochs                                                               |
+| `MAX_STEPS`                   |                           `-1` | Maximum optimization steps; `-1` trains according to the epoch setting        |
+| `BATCH_SIZE`                  |                            `1` | Batch size per GPU                                                            |
+| `GRADIENT_ACCUMULATION_STEPS` |                            `8` | Gradient accumulation steps                                                   |
+| `RESUME`                      |                         `none` | `auto` resumes from the latest checkpoint; an explicit path is also accepted  |
+| `BNB_RESUME_FIX`              |                            `0` | Set to `1` only for the relevant optimizer-state restore errors               |
+| `MAX_LENGTH`                  |                         `8192` | Must match data preparation                                                   |
+| `MAX_PROMPT_LENGTH`           |                         `7168` | Must match data preparation                                                   |
+| `RUN_NAME`                    | `character-action-rpo-no-book` | Training run name                                                             |
 
 Data preparation also supports `VALIDATION_RATIO`, which defaults to `0.01`.
 
