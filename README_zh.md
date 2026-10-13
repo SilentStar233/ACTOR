@@ -14,9 +14,9 @@
   <a href="README.md">English</a> · <strong>简体中文</strong>
 </p>
 
-[![ACTOR Benchmark 演示](figures/benchmark_demo_cover.png)](figures/benchmark_demo.mp4)
+https://github.com/user-attachments/assets/9046b658-7e14-465d-a4ac-65beb045274b
 
-▶ [点击观看演示](figures/benchmark_demo.mp4)：以一道真实匿名题目展示角色上下文、候选行为及参考答案。上下文为便于展示而精简。
+以一道真实匿名题目展示角色上下文、候选行为及参考答案。上下文为便于展示而精简。
 
 ## 项目介绍
 

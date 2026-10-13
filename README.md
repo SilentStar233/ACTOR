@@ -14,9 +14,9 @@
   <strong>English</strong> · <a href="README_zh.md">简体中文</a>
 </p>
 
-[![ACTOR benchmark demo](figures/benchmark_demo_cover.png)](figures/benchmark_demo.mp4)
+https://github.com/user-attachments/assets/9046b658-7e14-465d-a4ac-65beb045274b
 
-▶ [Watch the demo](figures/benchmark_demo.mp4): follow a real anonymized question from character context to candidate actions and the reference answer. Context is shortened for display.
+Follow a real anonymized question from character context to candidate actions and the reference answer. Context is shortened for display.
 
 ## Introduction
 
